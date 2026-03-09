@@ -1,5 +1,7 @@
 import asyncio
 import logging
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import List, Optional
 
 from aiogram import Bot, Dispatcher, F
@@ -24,9 +26,27 @@ from db import (
 import httpx
 
 
+LOG_DIR = Path(__file__).resolve().parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
+log_formatter = logging.Formatter(
+    "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+
+file_handler = RotatingFileHandler(
+    LOG_DIR / "bot.log",
+    maxBytes=5_000_000,
+    backupCount=10,
+    encoding="utf-8",
+)
+file_handler.setFormatter(log_formatter)
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(log_formatter)
+
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[file_handler, console_handler],
 )
 logger = logging.getLogger(__name__)
 

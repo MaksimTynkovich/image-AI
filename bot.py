@@ -272,6 +272,20 @@ async def _handle_image_generation(
             image_urls=image_urls,
         )
 
+        # Обновляем статус и ссылку на результат в БД
+        if request_id is not None:
+            try:
+                async with AsyncSessionLocal() as session:
+                    await update_image_request_status(
+                        session=session,
+                        request_id=request_id,
+                        status="success",
+                        generated_url=generated.url,
+                    )
+                    await session.commit()
+            except Exception:
+                logger.exception("Не удалось сохранить generated_url в БД")
+
         # Скачиваем изображение по ссылке и отправляем в Telegram
         async with httpx.AsyncClient() as client:
             resp = await client.get(generated.url)

@@ -40,6 +40,22 @@ user_states: dict[int, str] = {}
 
 @dp.message(CommandStart())
 async def cmd_start(message: Message) -> None:
+    # Регистрируем пользователя в БД при первом /start
+    try:
+        if message.from_user is not None:
+            async with AsyncSessionLocal() as session:
+                tg_user = message.from_user
+                await get_or_create_user(
+                    session=session,
+                    telegram_id=tg_user.id,
+                    username=tg_user.username,
+                    first_name=tg_user.first_name,
+                    last_name=tg_user.last_name,
+                )
+                await session.commit()
+    except Exception:
+        logger.exception("Не удалось сохранить пользователя при /start")
+
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="🎨 Сгенерировать картинку", callback_data="generate_image")],
